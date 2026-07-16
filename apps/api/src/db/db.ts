@@ -26,7 +26,39 @@ export async function initDb() {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   `);
+  
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS billing (
+      actor_id VARCHAR(255) PRIMARY KEY,
+      scans_used INTEGER DEFAULT 1
+    );
+  `);
   console.log("DB Initialized");
+}
+
+export async function incrementBilling(actor_id: string): Promise<number> {
+  const query = `
+    INSERT INTO billing (actor_id, scans_used) 
+    VALUES ($1, 1) 
+    ON CONFLICT (actor_id) 
+    DO UPDATE SET scans_used = billing.scans_used + 1 
+    RETURNING scans_used
+  `;
+  try {
+    const res = await db.query(query, [actor_id]);
+    return res.rows[0].scans_used;
+  } catch (e) {
+    return 1; // fail safe
+  }
+}
+
+export async function getSeenCount(content_sha256: string): Promise<number> {
+  try {
+    const res = await db.query(`SELECT COUNT(*) as count FROM receipts WHERE content_sha256 = $1`, [content_sha256]);
+    return parseInt(res.rows[0].count, 10);
+  } catch (e) {
+    return 0; // fail safe
+  }
 }
 
 export async function insertReceipt(receipt: any) {
