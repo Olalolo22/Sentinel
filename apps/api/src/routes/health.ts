@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { RULES_VERSION } from "@sentinel/rules";
 import { MODEL_VERSION, API_VERSION } from "../version.js";
-import { loadSigningKey } from "../receipts/signing.js";
+import { publicKeyStr } from "../receipts/signing.js";
 import { dbHealthy } from "../db/client.js";
 import { redisHealthy } from "../cache/redis.js";
 
@@ -10,7 +10,7 @@ export const health = new Hono();
 health.get("/", async (c) => {
   let signerPubkey: string | null = null;
   try {
-    signerPubkey = loadSigningKey().pubHex;
+    signerPubkey = publicKeyStr;
   } catch {
     // key not configured — report it, paid routes will refuse to run
   }

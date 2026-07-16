@@ -1,11 +1,19 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { health } from "./routes/health.js";
+import { scan } from "./routes/scan.js";
+import { verify } from "./routes/verify.js";
+import { chain } from "./routes/chain.js";
 
 export function createApp() {
   const app = new Hono();
   app.use("*", cors());
   app.route("/v1/health", health);
+  
+  app.post("/v1/scan", scan);
+  app.get("/v1/verify/:verdict_hash", verify);
+  app.get("/v1/chain/:job_id", chain);
+
   app.get("/", (c) =>
     c.json({
       service: "sentinel",

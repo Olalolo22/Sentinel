@@ -1,0 +1,67 @@
+import { Context } from "hono";
+import crypto from "crypto";
+import { normalize, decodeReportStrings } from "../pipeline/stage0_normalize.js";
+import { stage1Heuristics } from "../pipeline/stage1_heuristics.js";
+import { stage2Judge } from "../pipeline/stage2_judge.js";
+import { stage3Assemble } from "../pipeline/stage3_assemble.js";
+import { signReceipt } from "../receipts/signing.js";
+import { insertReceipt } from "../db/db.js";
+
+export async function scan(c: Context) {
+  try {
+    const body = await c.req.json();
+    const { content, content_type = "text", context = "generic", job_id, prev_receipt_hash, actor_id = "unknown_actor" } = body;
+
+    if (!content) {
+      return c.json({ error: "Missing 'content' field" }, 400);
+    }
+
+    // Hash raw content
+    const content_sha256 = crypto.createHash("sha256").update(content).digest("hex");
+
+    // Stage 0 - Normalize
+    const { canonical, decodeReport } = normalize(content, content_type);
+    const decodeReportStrs = decodeReportStrings(decodeReport);
+
+    // Stage 1 - Heuristics
+    const stage1 = stage1Heuristics(canonical);
+
+    // Stage 2 - Judge
+    let stage2 = null;
+    if (!stage1.shouldShortCircuit) {
+      stage2 = await stage2Judge(content, canonical, decodeReportStrs, context);
+    }
+
+    // Stage 3 - Assemble
+    const decision = stage3Assemble(content, stage1, stage2, job_id, prev_receipt_hash, actor_id);
+    
+    // Set sha256 and decode report
+    decision.trust_receipt.content_sha256 = content_sha256;
+    decision.decode_report = decodeReportStrs;
+
+    // Sign Receipt
+    const { signature, payloadHash } = signReceipt(decision.trust_receipt);
+    
+    const finalDecision = {
+      ...decision,
+      trust_receipt: {
+        ...decision.trust_receipt,
+        verdict_hash: payloadHash,
+        signature
+      }
+    };
+
+    // Store in DB
+    try {
+      await insertReceipt(finalDecision.trust_receipt);
+    } catch (e) {
+      console.error("DB Insert Error:", e);
+      // Fail silently for DB errors so the API doesn't crash during demo if DB is flaky
+    }
+
+    return c.json(finalDecision);
+  } catch (error: any) {
+    console.error("Scan Error:", error);
+    return c.json({ error: "Internal Server Error", message: error?.message }, 500);
+  }
+}

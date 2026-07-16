@@ -1,0 +1,65 @@
+import pg from "pg";
+
+const { Pool } = pg;
+
+export const db = new Pool({
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/sentinel",
+});
+
+export async function initDb() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS receipts (
+      id SERIAL PRIMARY KEY,
+      verdict_hash VARCHAR(255) UNIQUE NOT NULL,
+      content_sha256 VARCHAR(255) NOT NULL,
+      job_id VARCHAR(255),
+      prev_receipt_hash VARCHAR(255),
+      actor_id VARCHAR(255) NOT NULL,
+      action VARCHAR(50) NOT NULL,
+      risk_score INTEGER NOT NULL,
+      confidence DOUBLE PRECISION NOT NULL,
+      threats JSONB NOT NULL DEFAULT '[]'::jsonb,
+      model_version VARCHAR(100),
+      rules_version VARCHAR(100),
+      signature TEXT NOT NULL,
+      bond_ref VARCHAR(255),
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  console.log("DB Initialized");
+}
+
+export async function insertReceipt(receipt: any) {
+  const query = `
+    INSERT INTO receipts (
+      verdict_hash, content_sha256, job_id, prev_receipt_hash, actor_id, action,
+      risk_score, confidence, threats, model_version, rules_version, signature, bond_ref
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+  `;
+  const values = [
+    receipt.verdict_hash,
+    receipt.content_sha256,
+    receipt.job_id,
+    receipt.prev_receipt_hash,
+    receipt.actor_id,
+    receipt.action,
+    receipt.risk_score,
+    receipt.confidence,
+    JSON.stringify(receipt.threats || []),
+    receipt.model_version,
+    receipt.rules_version,
+    receipt.signature,
+    receipt.bond_ref
+  ];
+  await db.query(query, values);
+}
+
+export async function getReceipt(verdict_hash: string) {
+  const result = await db.query(`SELECT * FROM receipts WHERE verdict_hash = $1`, [verdict_hash]);
+  return result.rows[0];
+}
+
+export async function getChain(job_id: string) {
+  const result = await db.query(`SELECT * FROM receipts WHERE job_id = $1 ORDER BY created_at ASC`, [job_id]);
+  return result.rows;
+}
