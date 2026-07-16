@@ -41,13 +41,19 @@ export async function batchScan(c: Context) {
         // Stage 2 - Judge
         let stage2: JudgeResponse | null = null;
         if (!stage1.shouldShortCircuit) {
-          const redis = getRedis();
           const cacheKey = `llm_judge:${content_sha256}:${context}`;
+          let redis = null;
+          
+          try {
+            if (process.env.REDIS_URL) redis = getRedis();
+          } catch (e) {}
           
           let cachedStr = null;
-          try {
-            cachedStr = await redis.get(cacheKey);
-          } catch (e) {}
+          if (redis) {
+            try {
+              cachedStr = await redis.get(cacheKey);
+            } catch (e) {}
+          }
 
           if (cachedStr) {
             try {
@@ -57,9 +63,11 @@ export async function batchScan(c: Context) {
 
           if (!stage2) {
             stage2 = await stage2Judge(content, canonical, decodeReportStrs, context);
-            try {
-              await redis.setex(cacheKey, 86400, JSON.stringify(stage2));
-            } catch (e) {}
+            if (redis) {
+              try {
+                await redis.setex(cacheKey, 86400, JSON.stringify(stage2));
+              } catch (e) {}
+            }
           }
         }
 
