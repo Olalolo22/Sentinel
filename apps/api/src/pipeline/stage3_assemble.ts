@@ -50,7 +50,7 @@ export function stage3Assemble(
     actor_id: actorId,
     job_id: jobId || null,
     prev_receipt_hash: prevReceiptHash || null,
-    model_version: "claude-3-5-sonnet-20241022",
+    model_version: "gemini-1.5-pro",
     rules_version: RULES_VERSION,
     timestamp,
     action,
