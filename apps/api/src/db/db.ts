@@ -87,11 +87,21 @@ export async function insertReceipt(receipt: any) {
 }
 
 export async function getReceipt(verdict_hash: string) {
-  const result = await db.query(`SELECT * FROM receipts WHERE verdict_hash = $1`, [verdict_hash]);
-  return result.rows[0];
+  try {
+    const result = await db.query(`SELECT * FROM receipts WHERE verdict_hash = $1`, [verdict_hash]);
+    return result.rows[0];
+  } catch (e) {
+    console.error("DB getReceipt Error:", e);
+    return null;
+  }
 }
 
 export async function getChain(job_id: string) {
-  const result = await db.query(`SELECT * FROM receipts WHERE job_id = $1 ORDER BY created_at ASC`, [job_id]);
-  return result.rows;
+  try {
+    const result = await db.query(`SELECT * FROM receipts WHERE job_id = $1 ORDER BY created_at ASC`, [job_id]);
+    return result.rows;
+  } catch (e) {
+    console.error("DB getChain Error:", e);
+    return [];
+  }
 }
