@@ -24,6 +24,8 @@ export interface DecodeEvent {
     | "html-comment"
     | "html-hidden"
     | "html-attr-text"
+    | "tag-chars"
+    | "variation-selector"
     | "file-b64";
   /** [start, end) span in the text of the layer where it was found */
   span: [number, number];
@@ -86,28 +88,43 @@ const CONFUSABLES: Record<string, string> = {
   // misc lookalikes
   "ı": "i", // dotless i
   "ł": "l", // l with stroke
-  "’": "'", "‘": "'", "“": '"', "”": '"',
-  "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-",
+  // NOTE: typographic quotes/dashes (’ “ – —) are intentionally NOT folded —
+  // they are ordinary punctuation in legitimate text and folding them would
+  // flag benign content as homoglyph evasion. NFKC leaves them as-is.
 };
 
 // ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
 
+/** Chars Stage 0 itself strips/decodes — neutral for the plausibility test,
+ *  so a payload that hides its tail in tag/invisible chars still reads as text. */
+function isNormalizedAway(c: number): boolean {
+  return (
+    (c >= 0x200b && c <= 0x200f) || (c >= 0x202a && c <= 0x202e) ||
+    (c >= 0x2060 && c <= 0x2064) || (c >= 0x2066 && c <= 0x2069) ||
+    c === 0xfeff || c === 0x00ad || c === 0x180e || c === 0x034f || c === 0x061c ||
+    (c >= 0xfe00 && c <= 0xfe0f) || (c >= 0xe0000 && c <= 0xe01ef)
+  );
+}
+
 /** Is a decoded byte string plausibly human/agent-readable text? */
 export function isPlausibleText(s: string): boolean {
-  if (s.length < 4) return false;
   let printable = 0;
   let letters = 0;
+  let effectiveLen = 0;
   for (const ch of s) {
     const c = ch.codePointAt(0)!;
+    if (isNormalizedAway(c)) continue; // neutral: neither for nor against
+    effectiveLen++;
     if (c === 9 || c === 10 || c === 13 || (c >= 32 && c < 127)) printable++;
     else if (c >= 0x00a0 && c <= 0x2fff) printable++; // common non-ASCII text
     else if (c >= 0x3000 && c <= 0x9fff) { printable++; letters++; continue; } // CJK
     if (/[a-zA-ZЀ-ӿ]/.test(ch)) letters++;
   }
-  const printableRatio = printable / [...s].length;
-  const letterRatio = letters / [...s].length;
+  if (effectiveLen < 4) return false;
+  const printableRatio = printable / effectiveLen;
+  const letterRatio = letters / effectiveLen;
   return printableRatio >= 0.9 && letterRatio >= 0.35;
 }
 
@@ -253,10 +270,42 @@ interface PassResult {
   decodedChars: number;
 }
 
-/** One pass: NFKC → strip invisibles → fold homoglyphs → unwrap encodings. */
+// Unicode Tags block (U+E0000–U+E007F): invisible, but LLMs can read the
+// smuggled ASCII. U+E0020–U+E007E map to printable ASCII (cp − 0xE0000);
+// U+E0001 (language tag) and U+E007F (cancel) are control-only. We DECODE the
+// printable ones to reveal the payload to Stage 1 + the judge, and strip the
+// controls — then flag the whole thing as an invisible-smuggling attempt.
+const TAG_RUN_RE = /[\u{E0000}-\u{E007F}]+/gu;
+// variation selectors + more invisible format chars used to hide/split payloads
+const VARIATION_RE = /[\u{FE00}-\u{FE0F}\u{E0100}-\u{E01EF}]/gu;
+const EXTRA_INVISIBLE_RE = /[⁡-⁤ᅟᅠㅤﾠ឴឵]/g;
+
+function decodeTagChar(cp: number): string {
+  if (cp === 0xe0020) return " ";
+  if (cp >= 0xe0021 && cp <= 0xe007e) return String.fromCharCode(cp - 0xe0000);
+  return ""; // language/cancel tags and anything else: strip
+}
+
+/** One pass: NFKC → decode tag smuggling → strip invisibles → fold homoglyphs → unwrap encodings. */
 function normalizePass(input: string, depth: number): PassResult {
   const events: DecodeEvent[] = [];
   let text = input.normalize("NFKC");
+
+  // Unicode Tag smuggling → decode to visible ASCII so downstream stages see it
+  TAG_RUN_RE.lastIndex = 0;
+  let tm: RegExpExecArray | null;
+  while ((tm = TAG_RUN_RE.exec(text)) !== null) {
+    const decoded = [...tm[0]].map((ch) => decodeTagChar(ch.codePointAt(0)!)).join("");
+    events.push({ kind: "tag-chars", span: [tm.index, tm.index + tm[0].length], depth, note: decoded ? `hidden tag text: "${decoded.slice(0, 40)}"` : "tag control chars" });
+  }
+  text = text.replace(TAG_RUN_RE, (run) => [...run].map((ch) => decodeTagChar(ch.codePointAt(0)!)).join(""));
+
+  // variation selectors → strip
+  VARIATION_RE.lastIndex = 0;
+  while ((tm = VARIATION_RE.exec(text)) !== null) {
+    events.push({ kind: "variation-selector", span: [tm.index, tm.index + tm[0].length], depth, note: `U+${tm[0].codePointAt(0)!.toString(16).toUpperCase()}` });
+  }
+  text = text.replace(VARIATION_RE, "").replace(EXTRA_INVISIBLE_RE, "");
 
   // zero-width
   ZERO_WIDTH_RE.lastIndex = 0;
@@ -406,7 +455,8 @@ export function normalize(content: string, contentType: ContentType = "text"): N
     canonical,
     decodeReport: allEvents,
     flags: {
-      hadZeroWidth: allEvents.some((e) => e.kind === "zero-width"),
+      // tag/variation smuggling is invisible-char evasion → same +40 signal
+      hadZeroWidth: allEvents.some((e) => e.kind === "zero-width" || e.kind === "tag-chars" || e.kind === "variation-selector"),
       hadBidiOverride: allEvents.some((e) => e.kind === "bidi-override"),
       homoglyphCount: totalHomoglyphs,
       encodedRatio: canonical.length > 0 ? Math.min(1, totalDecodedChars / canonical.length) : 0,
