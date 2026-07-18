@@ -78,15 +78,16 @@ ${normalizedText}
               items: {
                 type: SchemaType.OBJECT,
                 properties: {
-                  type: { 
-                    type: SchemaType.STRING, 
+                  type: {
+                    type: SchemaType.STRING,
+                    format: "enum",
                     enum: [
-                      "T1_prompt_injection", "T2_hidden_encoded_instructions", "T3_escrow_manipulation", 
-                      "T4_payment_redirection", "T5_malicious_payloads_links", "T6_negotiation_coercion", 
+                      "T1_prompt_injection", "T2_hidden_encoded_instructions", "T3_escrow_manipulation",
+                      "T4_payment_redirection", "T5_malicious_payloads_links", "T6_negotiation_coercion",
                       "T7_data_exfiltration_prompts", "T8_cross_agent_worms"
                     ]
                   },
-                  severity: { type: SchemaType.STRING, enum: ["low", "medium", "high", "critical"] },
+                  severity: { type: SchemaType.STRING, format: "enum", enum: ["low", "medium", "high", "critical"] },
                   span: { type: SchemaType.ARRAY, items: { type: SchemaType.NUMBER }, description: "Start and end index in text" },
                   excerpt: { type: SchemaType.STRING },
                   rationale: { type: SchemaType.STRING }
