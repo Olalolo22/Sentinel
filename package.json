@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "test": "npm run test --workspaces --if-present",
-    "build": "npm run build -w packages/rules && npm run build -w apps/api",
+    "build": "npm run build -w packages/rules && npm run build -w packages/sdk && npm run build -w apps/api",
     "dev": "npm run dev -w apps/api"
   },
   "engines": {
