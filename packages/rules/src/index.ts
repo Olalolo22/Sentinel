@@ -1,4 +1,6 @@
 export const RULES_VERSION = "1.0.0";
+import dataset from "./dataset.json" with { type: "json" };
+export const PROMPT_INJECTION_DATASET = dataset as string[];
 
 // Basic threat taxonomy patterns
 export const INJECTION_PATTERNS = [

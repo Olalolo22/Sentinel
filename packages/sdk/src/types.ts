@@ -124,6 +124,13 @@ export interface SentinelConfig {
    * Timeout in milliseconds for each HTTP request.  Default: 30_000.
    */
   timeoutMs?: number;
+
+  /**
+   * Number of times to retry on transient network failures or 5xx errors.
+   * Uses exponential backoff: 500ms, 1000ms, 2000ms, ...
+   * Default: 2.
+   */
+  retries?: number;
 }
 
 export interface ScanOptions {
@@ -133,4 +140,28 @@ export interface ScanOptions {
   jobId?: string;
   /** If supplied, overrides the SDK's auto-linked prev_receipt_hash */
   prevReceiptHash?: string;
+}
+
+// ─── Dispute types ────────────────────────────────────────────────────────────
+
+export type DisputeStatusValue = "open" | "approved" | "denied" | "escalated";
+
+export interface DisputeOptions {
+  /**
+   * The raw content of the malicious payload that bypassed Sentinel.
+   * Required by the API to power the Stage 4 Retrospection Immune System.
+   */
+  rawContent: string;
+  /** Optional URL linking to external evidence of the exploit */
+  evidenceUrl?: string;
+}
+
+export interface DisputeResponse {
+  verdict_hash: string;
+  status: DisputeStatusValue;
+  claimant_actor_id: string;
+  evidence_url: string | null;
+  raw_content: string | null;
+  created_at: string;
+  resolved_at: string | null;
 }

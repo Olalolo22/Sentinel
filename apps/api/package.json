@@ -11,6 +11,7 @@
     "migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hono/node-server": "^1.13.7",
     "@sentinel/rules": "*",
     "@x402/evm": "^2.19.0",

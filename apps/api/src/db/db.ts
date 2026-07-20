@@ -6,6 +6,8 @@ let db: pg.Pool | null = null;
 // Memory storage fallbacks
 const memoryReceipts = new Map<string, any>();
 const memoryBilling = new Map<string, number>();
+const memoryDisputes = new Map<string, any>();
+const memoryDynamicRules: any[] = [];
 
 try {
   if (process.env.DATABASE_URL) {
@@ -131,6 +133,91 @@ export async function getChain(job_id: string) {
     return result.rows;
   } catch (e) {
     console.error("DB getChain Error:", e);
+    return [];
+  }
+}
+
+export async function submitDispute(verdict_hash: string, claimant_actor_id: string, evidence_url: string | null, raw_content: string | null = null) {
+  if (useMemoryOnly || !db) {
+    memoryDisputes.set(verdict_hash, {
+      verdict_hash,
+      claimant_actor_id,
+      evidence_url,
+      raw_content,
+      status: 'open',
+      created_at: new Date().toISOString()
+    });
+    return;
+  }
+
+  const query = `
+    INSERT INTO disputes (verdict_hash, claimant_actor_id, evidence_url, raw_content, status)
+    VALUES ($1, $2, $3, $4, 'open')
+  `;
+  try {
+    await db.query(query, [verdict_hash, claimant_actor_id, evidence_url, raw_content]);
+  } catch (e) {
+    console.error("DB submitDispute Error:", e);
+    throw e;
+  }
+}
+
+export async function getDispute(verdict_hash: string) {
+  if (useMemoryOnly || !db) {
+    return memoryDisputes.get(verdict_hash) || null;
+  }
+
+  try {
+    const result = await db.query(`SELECT * FROM disputes WHERE verdict_hash = $1`, [verdict_hash]);
+    return result.rows[0] || null;
+  } catch (e) {
+    console.error("DB getDispute Error:", e);
+    return null;
+  }
+}
+
+export async function approveDisputeStatus(verdict_hash: string) {
+  if (useMemoryOnly || !db) {
+    const disp = memoryDisputes.get(verdict_hash);
+    if (disp) {
+      disp.status = 'approved';
+      disp.resolved_at = new Date().toISOString();
+    }
+    return;
+  }
+
+  try {
+    await db.query(`UPDATE disputes SET status = 'approved', resolved_at = now() WHERE verdict_hash = $1`, [verdict_hash]);
+  } catch (e) {
+    console.error("DB approveDisputeStatus Error:", e);
+    throw e;
+  }
+}
+
+export async function insertDynamicRule(regex: string, description: string) {
+  if (useMemoryOnly || !db) {
+    memoryDynamicRules.push({ regex, description });
+    return;
+  }
+
+  try {
+    await db.query(`INSERT INTO dynamic_rules (regex, description) VALUES ($1, $2)`, [regex, description]);
+  } catch (e) {
+    console.error("DB insertDynamicRule Error:", e);
+    throw e;
+  }
+}
+
+export async function getDynamicRules(): Promise<any[]> {
+  if (useMemoryOnly || !db) {
+    return memoryDynamicRules;
+  }
+
+  try {
+    const result = await db.query(`SELECT regex, description FROM dynamic_rules`);
+    return result.rows;
+  } catch (e) {
+    console.error("DB getDynamicRules Error:", e);
     return [];
   }
 }

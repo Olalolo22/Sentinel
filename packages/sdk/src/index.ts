@@ -45,4 +45,7 @@ export type {
   Chain,
   ChainLink,
   VerifyResponse,
+  DisputeOptions,
+  DisputeResponse,
+  DisputeStatusValue,
 } from "./types.js";

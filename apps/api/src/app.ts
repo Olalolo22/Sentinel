@@ -5,6 +5,7 @@ import { scan } from "./routes/scan.js";
 import { batchScan } from "./routes/batch.js";
 import { verify } from "./routes/verify.js";
 import { chain } from "./routes/chain.js";
+import { createDispute, checkDispute, approveDispute } from "./routes/dispute.js";
 import { buildPaymentMiddleware } from "./payment/x402.js";
 
 export function createApp() {
@@ -17,6 +18,9 @@ export function createApp() {
   app.route("/v1/health", health);
   app.get("/v1/verify/:verdict_hash", verify);
   app.get("/v1/chain/:job_id", chain);
+  app.post("/v1/dispute", createDispute);
+  app.get("/v1/dispute/:verdict_hash", checkDispute);
+  app.post("/v1/dispute/:verdict_hash/approve", approveDispute);
 
   // Paid routes — optionally gated by x402 middleware
   // When PAYMENT_ENABLED=true: agents must attach an X-Payment header.
@@ -36,7 +40,7 @@ export function createApp() {
       version: "0.1.0",
       payment: process.env.PAYMENT_ENABLED === "true" ? "x402/enabled" : "free-tier",
       docs: "https://github.com/Olalolo22/Sentinel — pay-per-call trust layer for AI agents",
-      endpoints: ["/v1/health", "/v1/scan", "/v1/scan/batch", "/v1/verify/{verdict_hash}", "/v1/chain/{job_id}"],
+      endpoints: ["/v1/health", "/v1/scan", "/v1/scan/batch", "/v1/verify/{verdict_hash}", "/v1/chain/{job_id}", "/v1/dispute"],
     }),
   );
   return app;
