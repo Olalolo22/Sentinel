@@ -1,42 +1,37 @@
 import pg from "pg";
 
-const { Pool } = pg;
+let useMemoryOnly = false;
+let db: pg.Pool | null = null;
 
-export const db = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/sentinel",
-});
+// Memory storage fallbacks
+const memoryReceipts = new Map<string, any>();
+const memoryBilling = new Map<string, number>();
 
-export async function initDb() {
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS receipts (
-      id SERIAL PRIMARY KEY,
-      verdict_hash VARCHAR(255) UNIQUE NOT NULL,
-      content_sha256 VARCHAR(255) NOT NULL,
-      job_id VARCHAR(255),
-      prev_receipt_hash VARCHAR(255),
-      actor_id VARCHAR(255) NOT NULL,
-      action VARCHAR(50) NOT NULL,
-      risk_score INTEGER NOT NULL,
-      confidence DOUBLE PRECISION NOT NULL,
-      threats JSONB NOT NULL DEFAULT '[]'::jsonb,
-      model_version VARCHAR(100),
-      rules_version VARCHAR(100),
-      signature TEXT NOT NULL,
-      bond_ref VARCHAR(255),
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-  
-  await db.query(`
-    CREATE TABLE IF NOT EXISTS billing (
-      actor_id VARCHAR(255) PRIMARY KEY,
-      scans_used INTEGER DEFAULT 1
-    );
-  `);
-  console.log("DB Initialized");
+try {
+  if (process.env.DATABASE_URL) {
+    db = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+    // Fire-and-forget test connection
+    db.query("SELECT 1").catch(() => {
+      console.warn("[db] Postgres connection failed. Falling back to memory-only mode.");
+      useMemoryOnly = true;
+    });
+  } else {
+    useMemoryOnly = true;
+  }
+} catch (e) {
+  useMemoryOnly = true;
 }
 
 export async function incrementBilling(actor_id: string): Promise<number> {
+  if (useMemoryOnly || !db) {
+    const current = memoryBilling.get(actor_id) || 0;
+    const next = current + 1;
+    memoryBilling.set(actor_id, next);
+    return next;
+  }
+
   const query = `
     INSERT INTO billing (actor_id, scans_used) 
     VALUES ($1, 1) 
@@ -53,6 +48,14 @@ export async function incrementBilling(actor_id: string): Promise<number> {
 }
 
 export async function getSeenCount(content_sha256: string): Promise<number> {
+  if (useMemoryOnly || !db) {
+    let count = 0;
+    for (const receipt of memoryReceipts.values()) {
+      if (receipt.content_sha256 === content_sha256) count++;
+    }
+    return count;
+  }
+
   try {
     const res = await db.query(`SELECT COUNT(*) as count FROM receipts WHERE content_sha256 = $1`, [content_sha256]);
     return parseInt(res.rows[0].count, 10);
@@ -62,6 +65,12 @@ export async function getSeenCount(content_sha256: string): Promise<number> {
 }
 
 export async function insertReceipt(receipt: any) {
+  if (useMemoryOnly || !db) {
+    receipt.created_at = new Date().toISOString();
+    memoryReceipts.set(receipt.verdict_hash, receipt);
+    return;
+  }
+
   const query = `
     INSERT INTO receipts (
       verdict_hash, content_sha256, job_id, prev_receipt_hash, actor_id, action,
@@ -83,10 +92,19 @@ export async function insertReceipt(receipt: any) {
     receipt.signature,
     receipt.bond_ref
   ];
-  await db.query(query, values);
+  try {
+    await db.query(query, values);
+  } catch (e) {
+    // Silent fail -> allows pipeline to continue without DB
+    console.error("DB Insert Error:", e);
+  }
 }
 
 export async function getReceipt(verdict_hash: string) {
+  if (useMemoryOnly || !db) {
+    return memoryReceipts.get(verdict_hash) || null;
+  }
+
   try {
     const result = await db.query(`SELECT * FROM receipts WHERE verdict_hash = $1`, [verdict_hash]);
     return result.rows[0];
@@ -97,6 +115,17 @@ export async function getReceipt(verdict_hash: string) {
 }
 
 export async function getChain(job_id: string) {
+  if (useMemoryOnly || !db) {
+    const chain: any[] = [];
+    for (const receipt of memoryReceipts.values()) {
+      if (receipt.job_id === job_id) {
+        chain.push(receipt);
+      }
+    }
+    // Sort by created_at implicitly relies on Map insertion order, but we can sort manually
+    return chain.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }
+
   try {
     const result = await db.query(`SELECT * FROM receipts WHERE job_id = $1 ORDER BY created_at ASC`, [job_id]);
     return result.rows;
