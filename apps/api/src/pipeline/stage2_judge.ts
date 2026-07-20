@@ -101,13 +101,14 @@ ${normalizedText}
     
     const parsed = JSON.parse(content);
     return JudgeResponseSchema.parse(parsed);
-  } catch (error) {
+  } catch (error: any) {
     console.error("LLM Judge Error:", error);
     // Fail safe -> review
+    const errMsg = error?.error?.error?.message || error?.message || "Unknown error";
     return {
       risk_score: 50,
       confidence: 0.5,
-      reason: "LLM Evaluation failed or schema drift.",
+      reason: `LLM Evaluation failed: ${errMsg}`,
       threats: [],
     };
   }
