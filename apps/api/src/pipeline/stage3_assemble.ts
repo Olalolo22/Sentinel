@@ -1,6 +1,7 @@
 import { JudgeResponse } from "./stage2_judge.js";
 import { signReceipt } from "../receipts/signing.js";
 import { RULES_VERSION } from "@sentinel/rules";
+import { MODEL_VERSION } from "../version.js";
 
 export type Stage1Result = {
   score: number;
@@ -50,7 +51,7 @@ export function stage3Assemble(
     actor_id: actorId,
     job_id: jobId || null,
     prev_receipt_hash: prevReceiptHash || null,
-    model_version: "gemini-1.5-pro",
+    model_version: MODEL_VERSION,
     rules_version: RULES_VERSION,
     timestamp,
     action,
