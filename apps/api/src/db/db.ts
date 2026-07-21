@@ -194,6 +194,42 @@ export async function approveDisputeStatus(verdict_hash: string) {
   }
 }
 
+export async function denyDisputeStatus(verdict_hash: string) {
+  if (useMemoryOnly || !db) {
+    const disp = memoryDisputes.get(verdict_hash);
+    if (disp) {
+      disp.status = 'denied';
+      disp.resolved_at = new Date().toISOString();
+    }
+    return;
+  }
+
+  try {
+    await db.query(`UPDATE disputes SET status = 'denied', resolved_at = now() WHERE verdict_hash = $1`, [verdict_hash]);
+  } catch (e) {
+    console.error("DB denyDisputeStatus Error:", e);
+    throw e;
+  }
+}
+
+export async function escalateDisputeStatus(verdict_hash: string) {
+  if (useMemoryOnly || !db) {
+    const disp = memoryDisputes.get(verdict_hash);
+    if (disp) {
+      disp.status = 'escalated';
+      disp.resolved_at = new Date().toISOString();
+    }
+    return;
+  }
+
+  try {
+    await db.query(`UPDATE disputes SET status = 'escalated', resolved_at = now() WHERE verdict_hash = $1`, [verdict_hash]);
+  } catch (e) {
+    console.error("DB escalateDisputeStatus Error:", e);
+    throw e;
+  }
+}
+
 export async function insertDynamicRule(regex: string, description: string) {
   if (useMemoryOnly || !db) {
     memoryDynamicRules.push({ regex, description });

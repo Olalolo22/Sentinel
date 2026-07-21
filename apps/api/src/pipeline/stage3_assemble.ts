@@ -17,14 +17,14 @@ export function stage3Assemble(
   prevReceiptHash?: string,
   actorId: string = "unknown_actor"
 ) {
-  let finalScore = stage1.score;
+  let finalScore = Math.min(stage1.score, 100);
   let finalConfidence = 1.0;
   let finalThreats: any[] = [];
   let finalReason = "No threats found";
 
   if (stage2) {
-    // Merge scores (heuristic + judge)
-    finalScore = Math.max(stage1.score, stage2.risk_score);
+    // Merge scores (heuristic + judge), capped at 100
+    finalScore = Math.min(Math.max(stage1.score, stage2.risk_score), 100);
     finalConfidence = stage2.confidence;
     finalThreats = stage2.threats;
     finalReason = stage2.reason;
