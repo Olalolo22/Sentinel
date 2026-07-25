@@ -287,6 +287,7 @@ export async function fetchChain(jobId: string): Promise<{ hops: ChainHop[]; isS
 
 export async function submitDispute(
   verdictHash: string,
+  claimantActorId: string,
   rawContent: string,
   evidenceUrl?: string
 ): Promise<{ success: boolean; dispute?: DisputeRecord; message?: string }> {
@@ -295,13 +296,20 @@ export async function submitDispute(
     const res = await fetch(`${baseUrl}/v1/dispute`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ verdict_hash: verdictHash, raw_content: rawContent, evidence_url: evidenceUrl }),
+      body: JSON.stringify({
+        verdict_hash: verdictHash,
+        claimant_actor_id: claimantActorId,
+        raw_content: rawContent,
+        evidence_url: evidenceUrl,
+      }),
     });
 
     if (res.ok) {
       const data = await res.json();
-      return { success: true, dispute: data.dispute };
+      return { success: true, dispute: data.dispute, message: data.message };
     }
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, message: errData.error || "Failed to file dispute" };
   } catch {}
 
   // Simulated dispute creation
