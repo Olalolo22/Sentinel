@@ -164,15 +164,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onNavigat
               <div className="lg:col-span-7 space-y-3">
                 <div className="text-xs font-mono text-slate-400 flex items-center justify-between">
                   <span>Ed25519 Trust Receipt Verdict:</span>
-                  {heroResult && (
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase border ${
-                      heroResult.trust_receipt.verdict.action === "reject"
-                        ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
-                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                    }`}>
-                      {heroResult.trust_receipt.verdict.action}
-                    </span>
-                  )}
+                  {heroResult && (() => {
+                    const action = heroResult.trust_receipt?.verdict?.action || (heroResult as any).action || "allow";
+                    return (
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase border ${
+                        action === "reject"
+                          ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                          : action === "review"
+                          ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                          : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                      }`}>
+                        {action}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {!heroResult && !heroScanning && (
@@ -189,31 +194,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp, onNavigat
                   </div>
                 )}
 
-                {heroResult && (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs animate-in fade-in">
-                    <div className="flex items-center justify-between text-slate-300 border-b border-slate-800/80 pb-2">
-                      <span className="text-slate-400">Verdict Hash:</span>
-                      <span className="text-cyan-300 font-bold">{heroResult.trust_receipt.verdict_hash?.slice(0, 24)}...</span>
-                    </div>
+                {heroResult && (() => {
+                  const riskScore = heroResult.trust_receipt?.verdict?.risk_score ?? (heroResult as any).risk_score ?? 0;
+                  const displayRisk = (riskScore > 1 ? riskScore : riskScore * 100).toFixed(0);
+                  return (
+                    <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs animate-in fade-in">
+                      <div className="flex items-center justify-between text-slate-300 border-b border-slate-800/80 pb-2">
+                        <span className="text-slate-400">Verdict Hash:</span>
+                        <span className="text-cyan-300 font-bold">{heroResult.trust_receipt?.verdict_hash?.slice(0, 24) || "0x..."}...</span>
+                      </div>
 
-                    <div className="flex items-center justify-between text-slate-300 border-b border-slate-800/80 pb-2">
-                      <span className="text-slate-400">Ed25519 Signature:</span>
-                      <span className="text-emerald-300 font-bold truncate max-w-[240px]">{heroResult.trust_receipt.signature}</span>
-                    </div>
+                      <div className="flex items-center justify-between text-slate-300 border-b border-slate-800/80 pb-2">
+                        <span className="text-slate-400">Ed25519 Signature:</span>
+                        <span className="text-emerald-300 font-bold truncate max-w-[240px]">{heroResult.trust_receipt?.signature || "ed25519_sig..."}</span>
+                      </div>
 
-                    <div className="flex items-center justify-between text-slate-300">
-                      <span className="text-slate-400">Risk Score:</span>
-                      <span className="text-amber-400 font-bold">{(heroResult.trust_receipt.verdict.risk_score * 100).toFixed(0)}%</span>
-                      <button
-                        onClick={copyReceipt}
-                        className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 border border-slate-700 flex items-center gap-1 transition-colors"
-                      >
-                        {copiedReceipt ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedReceipt ? "Copied" : "Copy Receipt"}</span>
-                      </button>
+                      <div className="flex items-center justify-between text-slate-300">
+                        <span className="text-slate-400">Risk Score:</span>
+                        <span className="text-amber-400 font-bold">{displayRisk}%</span>
+                        <button
+                          onClick={copyReceipt}
+                          className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 border border-slate-700 flex items-center gap-1 transition-colors"
+                        >
+                          {copiedReceipt ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedReceipt ? "Copied" : "Copy Receipt"}</span>
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
             </div>

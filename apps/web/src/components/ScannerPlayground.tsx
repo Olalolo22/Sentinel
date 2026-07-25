@@ -236,7 +236,13 @@ export const ScannerPlayground: React.FC = () => {
               
               {/* Verdict Header Banner */}
               {(() => {
-                const verdict = getVerdictBadge(scanResult.trust_receipt.verdict.action);
+                const action = scanResult.trust_receipt?.verdict?.action || (scanResult as any).action || "allow";
+                const riskScore = scanResult.trust_receipt?.verdict?.risk_score ?? (scanResult as any).risk_score ?? 0;
+                const confidence = scanResult.trust_receipt?.verdict?.confidence ?? (scanResult as any).confidence ?? 1.0;
+                const displayRisk = (riskScore > 1 ? riskScore : riskScore * 100).toFixed(1);
+                const displayConf = (confidence * 100).toFixed(1);
+
+                const verdict = getVerdictBadge(action);
                 const VerdictIcon = verdict.icon;
                 return (
                   <div className={`p-4 rounded-2xl border flex items-center justify-between ${verdict.bg}`}>
@@ -247,7 +253,7 @@ export const ScannerPlayground: React.FC = () => {
                       <div>
                         <div className="text-sm font-extrabold tracking-wide uppercase">{verdict.label}</div>
                         <div className="text-xs opacity-80 font-mono">
-                          Risk Score: {(scanResult.trust_receipt.verdict.risk_score * 100).toFixed(1)}% | Confidence: {(scanResult.trust_receipt.verdict.confidence * 100).toFixed(1)}%
+                          Risk Score: {displayRisk}% | Confidence: {displayConf}%
                         </div>
                       </div>
                     </div>

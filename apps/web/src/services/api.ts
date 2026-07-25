@@ -154,8 +154,55 @@ export async function scanPayload(
       throw new Error(`Server responded with ${res.status}`);
     }
 
-    const data: ScanResponse = await res.json();
-    return { data, isSimulated: false };
+    const rawData: any = await res.json();
+    
+    // Normalize data shape so frontend always receives consistent trust_receipt & verdict objects
+    const action = rawData.action || rawData.trust_receipt?.action || rawData.trust_receipt?.verdict?.action || "allow";
+    const rawRisk = rawData.risk_score ?? rawData.trust_receipt?.verdict?.risk_score ?? 0;
+    const riskScore = rawRisk > 1 ? rawRisk / 100 : rawRisk;
+    const confidence = rawData.confidence ?? rawData.trust_receipt?.verdict?.confidence ?? 1.0;
+    const flags = rawData.flags || rawData.trust_receipt?.verdict?.flags || [];
+    const threatCategory = rawData.threat_category || rawData.trust_receipt?.verdict?.threat_category || null;
+
+    const normalizedData: ScanResponse = {
+      trust_receipt: {
+        version: rawData.trust_receipt?.version || "0.1.0",
+        timestamp: typeof rawData.trust_receipt?.timestamp === "number"
+          ? new Date(rawData.trust_receipt.timestamp * 1000).toISOString()
+          : rawData.trust_receipt?.timestamp || new Date().toISOString(),
+        job_id: rawData.trust_receipt?.job_id || jobId || "job_live",
+        prev_receipt_hash: rawData.trust_receipt?.prev_receipt_hash || null,
+        actor_id: rawData.trust_receipt?.actor_id || "sentinel_dashboard_user",
+        content_sha256: rawData.trust_receipt?.content_sha256 || "",
+        verdict: rawData.trust_receipt?.verdict || {
+          action,
+          risk_score: riskScore,
+          confidence,
+          flags,
+          threat_category: threatCategory,
+        },
+        stage_summary: rawData.trust_receipt?.stage_summary || {
+          stage0_normalized: true,
+          stage1_short_circuit: action === "reject",
+          stage2_llm_used: action !== "reject",
+        },
+        verdict_hash: rawData.trust_receipt?.verdict_hash || rawData.verdict_hash || "0x_live_verdict",
+        signature: rawData.trust_receipt?.signature || rawData.signature || "ed25519_live_sig",
+      },
+      decode_report: rawData.decode_report || [],
+      seen_count: rawData.seen_count || 1,
+      reason: rawData.reason,
+      stage1_hits: rawData.stage1_hits || [],
+      stage2_analysis: rawData.stage2_analysis || {
+        risk_score: riskScore,
+        confidence,
+        flags,
+        threat_category: threatCategory,
+        reasoning: rawData.reason || "Evaluated by Sentinel Defense Pipeline.",
+      },
+    };
+
+    return { data: normalizedData, isSimulated: false };
   } catch (err) {
     console.warn("API unreachable, generating fallback simulated response:", err);
     return { data: generateSimulatedScan(content, context, jobId), isSimulated: true };
