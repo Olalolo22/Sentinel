@@ -30,7 +30,11 @@ export function stage3Assemble(
     finalReason = stage2.reason;
   } else if (stage1.shouldShortCircuit) {
     finalReason = "Short-circuited due to high heuristic threat score.";
-    finalThreats = stage1.matches.map(m => ({ type: m, severity: "critical", span: [0, 0], excerpt: "", rationale: "Matched heuristic rule" }));
+    finalThreats = stage1.matches.map(m => {
+      const typeStr = typeof m === "string" ? m : ((m as any)?.ruleId || (m as any)?.match || "heuristic_threat");
+      const rationaleStr = typeof m === "object" && (m as any)?.match ? (m as any).match : "Matched heuristic rule";
+      return { type: typeStr, severity: "critical", span: [0, 0], excerpt: "", rationale: rationaleStr };
+    });
   }
 
   let action = "allow";

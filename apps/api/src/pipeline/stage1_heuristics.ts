@@ -62,7 +62,7 @@ export async function stage1Heuristics(normalizedText: string) {
       const re = new RegExp(rule.regex, "i");
       if (re.test(normalizedText)) {
         score += 90;
-        matches.push({ ruleId: "IMMUNE_SYSTEM", match: rule.description });
+        matches.push("immune_system_rule");
       }
     } catch(e) {}
   }
@@ -71,14 +71,14 @@ export async function stage1Heuristics(normalizedText: string) {
   const datasetHit = checkDatasetPromptInjection(normalizedText);
   if (datasetHit.flagged) {
     score += 100;
-    matches.push({ ruleId: "PROMPT_INJECTION_DATASET", match: datasetHit.reason });
+    matches.push("T1_prompt_injection_dataset");
   }
 
   // 4. External API: GoPlus Security
   const goplus = await checkGoPlusSecurity(normalizedText);
   if (goplus.flagged) {
     score += 100;
-    matches.push({ ruleId: "GOPLUS_API", match: goplus.reason });
+    matches.push("goplus_malicious_address");
   }
 
   const shouldShortCircuit = score >= 90;
