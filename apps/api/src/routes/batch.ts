@@ -36,7 +36,7 @@ export async function batchScan(c: Context) {
         const decodeReportStrs = decodeReportStrings(decodeReport);
 
         // Stage 1 - Heuristics
-        const stage1 = stage1Heuristics(canonical);
+        const stage1 = await stage1Heuristics(canonical);
 
         // Stage 2 - Judge
         let stage2: JudgeResponse | null = null;
