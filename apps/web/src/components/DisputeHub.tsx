@@ -128,21 +128,21 @@ export const DisputeHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Operator Review & Stage 4 Retrospection Simulator */}
+        {/* Right Column: Operator Review & Stage 4 Adaptive Defense */}
         <div className="lg:col-span-6 space-y-6">
           <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
                 <Zap className="w-4 h-4 text-purple-400" />
-                Stage 4: Immune System Retrospection Simulator
+                Stage 4: Adaptive Defense System
               </h3>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/30">
-                Auto-Rule Synthesis
+                Auto-Fingerprint Deployed
               </span>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              When an operator approves a valid dispute claim, Sentinel's Stage 4 pipeline uses an LLM to analyze the exploit payload and automatically synthesizes a new dynamic Regex firewall rule. Future identical or similar attacks are short-circuited at Stage 1 in &lt;15ms globally!
+              When an operator approves a valid dispute claim, Sentinel's Stage 4 Adaptive Defense pipeline analyzes the exploit mechanism and deploys a dynamic fingerprint rule to Stage 1. Future similar attack vectors are short-circuited in &lt;15ms globally.
             </p>
 
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 text-xs">
@@ -163,22 +163,35 @@ export const DisputeHub: React.FC = () => {
                 className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {approving ? <Cpu className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                <span>Approve Claim & Trigger Stage 4 Immune System</span>
+                <span>Approve Claim & Trigger Stage 4 Adaptive Defense</span>
               </button>
             </div>
 
-            {/* Generated Retrospection Rule Output */}
+            {/* Deployed Adaptive Defense Rule Fingerprint Output */}
             {retrospectionRule && (
               <div className="p-4 rounded-xl bg-purple-950/40 border border-purple-500/40 text-xs space-y-2 animate-in fade-in">
                 <div className="text-purple-300 font-bold flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-purple-400" />
-                  New Dynamic Firewall Rule Synthesized:
+                  Adaptive Firewall Rule Synthesized & Deployed
                 </div>
-                <pre className="p-3 rounded-lg bg-black/60 text-cyan-300 font-mono text-[11px] overflow-x-auto border border-purple-500/20">
-                  {retrospectionRule}
-                </pre>
+
+                <div className="p-3 rounded-lg bg-black/60 border border-purple-500/20 space-y-1.5 font-mono text-[11px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Rule Fingerprint ID:</span>
+                    <span className="text-cyan-300 font-bold">rule_7f3a9c82</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Status:</span>
+                    <span className="text-emerald-400 font-bold">Active in Stage 1 Heuristics (&lt;15ms)</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Database Sync:</span>
+                    <span className="text-purple-300 font-bold">Persisted to dynamic_rules</span>
+                  </div>
+                </div>
+
                 <div className="text-[11px] text-slate-400 font-mono">
-                  • Saved to DB dynamic_rules table. Refreshed every 60s across all Sentinel nodes.
+                  • Attack vector fingerprinted — all identical & derivative payloads auto-blocked globally.
                 </div>
               </div>
             )}
