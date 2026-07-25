@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { Header, TabType } from "./components/Header";
+import { LandingPage } from "./components/LandingPage";
 import { ScannerPlayground } from "./components/ScannerPlayground";
 import { ChainVisualizer } from "./components/ChainVisualizer";
 import { ReceiptVerifier } from "./components/ReceiptVerifier";
 import { DisputeHub } from "./components/DisputeHub";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
-import { Shield, GitBranch, Github, ExternalLink } from "lucide-react";
+import { Shield, Github } from "lucide-react";
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<TabType>("playground");
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   return (
     <div className="min-h-screen flex flex-col bg-[#070a12] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -18,6 +19,12 @@ export function App() {
 
       {/* Main Content Body */}
       <main className="flex-1">
+        {activeTab === "overview" && (
+          <LandingPage
+            onLaunchApp={() => setActiveTab("playground")}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
         {activeTab === "playground" && <ScannerPlayground />}
         {activeTab === "chain" && <ChainVisualizer />}
         {activeTab === "verifier" && <ReceiptVerifier />}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Shield, ShieldCheck, Activity, Settings, Lock, Coins } from "lucide-react";
+import { Shield, ShieldCheck, Activity, Settings, Lock, Coins, Layers } from "lucide-react";
 import { checkHealth, isSimulationMode } from "../services/api";
 import { ApiSettingsModal } from "./ApiSettingsModal";
 
-export type TabType = "playground" | "chain" | "verifier" | "dispute" | "analytics";
+export type TabType = "overview" | "playground" | "chain" | "verifier" | "dispute" | "analytics";
 
 interface HeaderProps {
   activeTab: TabType;
@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           <div className="flex items-center justify-between h-16 gap-4">
             
             {/* Logo & Subtitle */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab("playground")}>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab("overview")}>
               <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 via-blue-600/20 to-slate-900 border border-cyan-500/40 glow-cyan">
                 <Shield className="w-5 h-5 text-cyan-400" />
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -104,6 +104,18 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
 
           {/* Navigation Bar Tabs */}
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2 border-t border-slate-800/40">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                activeTab === "overview"
+                  ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+              }`}
+            >
+              <Layers className="w-4 h-4 text-cyan-400" />
+              Overview & Architecture
+            </button>
+
             <button
               onClick={() => setActiveTab("playground")}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
