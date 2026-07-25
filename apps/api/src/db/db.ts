@@ -11,12 +11,28 @@ const memoryDynamicRules: any[] = [];
 
 try {
   if (process.env.DATABASE_URL) {
+    const url = process.env.DATABASE_URL;
+    const isSSL = process.env.NODE_ENV === "production" || url.includes("render.com") || url.includes("sslmode=require");
     db = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: url,
+      ssl: isSSL ? { rejectUnauthorized: false } : undefined,
     });
-    // Fire-and-forget test connection
-    db.query("SELECT 1").catch(() => {
-      console.warn("[db] Postgres connection failed. Falling back to memory-only mode.");
+    // Fire-and-forget test connection & table initialization
+    db.query("SELECT 1").then(async () => {
+      console.log("[db] Postgres connected successfully.");
+      // Ensure tables exist
+      try {
+        await db?.query(`
+          CREATE TABLE IF NOT EXISTS billing (actor_id TEXT PRIMARY KEY, scans_used INT DEFAULT 0);
+          CREATE TABLE IF NOT EXISTS receipts (verdict_hash TEXT PRIMARY KEY, payload JSONB NOT NULL, created_at TIMESTAMPTZ DEFAULT now());
+          CREATE TABLE IF NOT EXISTS disputes (verdict_hash TEXT PRIMARY KEY, status TEXT NOT NULL, raw_content TEXT, evidence_url TEXT, created_at TIMESTAMPTZ DEFAULT now());
+          CREATE TABLE IF NOT EXISTS dynamic_rules (id SERIAL PRIMARY KEY, pattern TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT now());
+        `);
+      } catch (err) {
+        console.warn("[db] Table init warning:", err);
+      }
+    }).catch((err) => {
+      console.warn("[db] Postgres connection failed. Falling back to memory-only mode:", err.message);
       useMemoryOnly = true;
     });
   } else {
