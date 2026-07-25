@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               }`}
             >
               <ShieldCheck className="w-4 h-4" />
-              Interactive Scanner & Pipeline
+              Scanner
             </button>
 
             <button
