@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shield, ShieldCheck, Activity, Settings, Lock, Coins, Layers, Play, FileText, ArrowRight, ExternalLink } from "lucide-react";
+import { Shield, ShieldCheck, Activity, Settings, Lock, Coins, Layers, Play, FileText, ArrowRight, ExternalLink, AlertCircle } from "lucide-react";
 import { checkHealth, isSimulationMode } from "../services/api";
 import { ApiSettingsModal } from "./ApiSettingsModal";
 
@@ -60,13 +60,14 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               </div>
             </div>
 
-            {/* Live Badges: X Layer Escrow & Ed25519 Key Status */}
-            <div className="hidden xl:flex items-center gap-3">
-              {/* Escrow Bond Badge */}
+            {/* Live Badges: X Layer Testnet Bond & API Mode Status */}
+            <div className="hidden lg:flex items-center gap-3">
+              
+              {/* Testnet Escrow Bond Badge */}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
                 <Coins className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-slate-400">X Layer Bond:</span>
-                <span className="font-mono font-semibold text-amber-300">50,000 OKB</span>
+                <span className="text-slate-400">X Layer Testnet Bond:</span>
+                <span className="font-mono font-semibold text-amber-300">50,000 Mock OKB</span>
               </div>
 
               {/* Ed25519 Active Badge */}
@@ -76,19 +77,20 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 <span className="font-mono font-semibold text-emerald-300">Ed25519 Native</span>
               </div>
 
-              {/* API Status Badge */}
+              {/* Explicit API / Simulation Status Badge */}
               <div
                 onClick={() => setIsSettingsOpen(true)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono cursor-pointer transition-all ${
                   simMode
-                    ? "bg-purple-950/40 border-purple-500/40 text-purple-300 hover:bg-purple-900/50"
+                    ? "bg-amber-950/60 border-amber-500/50 text-amber-300 hover:bg-amber-900/60 shadow-md shadow-amber-500/10"
                     : apiStatus === "online"
                     ? "bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/50"
                     : "bg-rose-950/40 border-rose-500/40 text-rose-300 hover:bg-rose-900/50"
                 }`}
+                title="Click to configure backend API settings"
               >
-                <span className={`w-2 h-2 rounded-full ${simMode ? "bg-purple-400 animate-pulse" : apiStatus === "online" ? "bg-emerald-400 animate-pulse" : "bg-rose-400"}`} />
-                <span>{simMode ? "Simulation Engine" : apiStatus === "online" ? "API Live" : "Offline (Fallback)"}</span>
+                <span className={`w-2 h-2 rounded-full ${simMode ? "bg-amber-400 animate-pulse" : apiStatus === "online" ? "bg-emerald-400 animate-pulse" : "bg-rose-400"}`} />
+                <span>{simMode ? "Demo Mode (Client Engine)" : apiStatus === "online" ? "API Live (Hono Backend)" : "Offline"}</span>
               </div>
             </div>
 

@@ -40,9 +40,9 @@ export const DisputeHub: React.FC = () => {
           </div>
 
           <div className="p-5 rounded-2xl bg-slate-950/80 border border-amber-500/30 text-right font-mono text-xs space-y-1 shrink-0">
-            <div className="text-slate-400">Escrow Bond Coverage:</div>
-            <div className="text-amber-400 font-bold text-lg">50,000 OKB Staked</div>
-            <div className="text-[11px] text-slate-500">10× Fee Refund Guarantee</div>
+            <div className="text-slate-400">X Layer Testnet Escrow Pool:</div>
+            <div className="text-amber-400 font-bold text-lg">Mock 50,000 OKB Staked</div>
+            <div className="text-[11px] text-slate-500">10× Fee Refund Guarantee (Testnet)</div>
           </div>
         </div>
 
@@ -118,7 +118,7 @@ export const DisputeHub: React.FC = () => {
           <div className="lg:col-span-7 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-white font-mono uppercase tracking-wider">Active Disputes</h3>
-              <span className="text-xs font-mono text-slate-400">Current Reviews</span>
+              <span className="text-xs font-mono text-slate-400">Sample Active Reviews (Demonstration Data)</span>
             </div>
 
             <div className="space-y-4">

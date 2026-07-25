@@ -86,7 +86,7 @@ export const ChainVisualizer: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold text-white">Recent Agent Decisions</h2>
-            <span className="text-xs font-mono text-slate-400">Live Stream &bull; Last 24 Hours</span>
+            <span className="text-xs font-mono text-slate-400">Sample Demonstration Trace Data &bull; Live Stream</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

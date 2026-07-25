@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShieldCheck, ShieldAlert, Play, Copy, Check, Terminal, Cpu, Code2, AlertTriangle, Layers, Info, ArrowRight, ChevronDown, ChevronUp, Lock, CheckCircle2, UserCheck, Shield, Zap, RefreshCw } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Play, Copy, Check, Terminal, Cpu, Code2, AlertTriangle, AlertCircle, Layers, Info, ArrowRight, ChevronDown, ChevronUp, Lock, CheckCircle2, UserCheck, Shield, Zap, RefreshCw } from "lucide-react";
 import { PRESET_PAYLOADS } from "../data/presets";
 import { scanPayload } from "../services/api";
 import { ScanResponse, PresetPayload } from "../types";
@@ -293,6 +293,22 @@ export const ScannerPlayground: React.FC = () => {
               return (
                 <div className="space-y-6 animate-in fade-in duration-300">
                   
+                  {/* Simulation Engine Explicit Disclaimer Badge */}
+                  {isSimulated && (
+                    <div className="p-4 rounded-2xl bg-amber-950/60 border border-amber-500/40 text-amber-300 font-mono text-xs flex items-center justify-between shadow-lg shadow-amber-500/10">
+                      <div className="flex items-center gap-2.5">
+                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div>
+                          <strong className="text-white uppercase font-bold">Demo Engine (Offline Client Mode)</strong>
+                          <div className="text-[11px] text-amber-200/80">Evaluated locally via client-side pattern engine. Start Hono API for live backend checks.</div>
+                        </div>
+                      </div>
+                      <span className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase border border-amber-500/40 whitespace-nowrap">
+                        Client Sim
+                      </span>
+                    </div>
+                  )}
+
                   {/* Trust Decision Outcome Card */}
                   <div className={`p-6 rounded-3xl border space-y-4 ${verdict.bg}`}>
                     <div className="flex items-center justify-between">

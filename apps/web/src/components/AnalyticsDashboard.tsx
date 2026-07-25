@@ -35,7 +35,7 @@ export const AnalyticsDashboard: React.FC = () => {
         <div className="card-solid-dark p-8 rounded-3xl space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-extrabold text-white">Trust Overview</h2>
-            <span className="text-xs font-mono text-slate-400">Agent Health At A Glance</span>
+            <span className="text-xs font-mono text-slate-400">Sample Historical Telemetry &bull; Health At A Glance</span>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center font-mono">
