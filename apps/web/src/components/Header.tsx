@@ -137,7 +137,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               }`}
             >
               <Activity className="w-4 h-4" />
-              A2MCP Chain Visualizer
+              Sentinel Chain
             </button>
 
             <button
