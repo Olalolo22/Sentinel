@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Shield, ShieldCheck, Activity, Settings, Lock, Coins, Layers } from "lucide-react";
+import { Shield, ShieldCheck, Activity, Settings, Lock, Coins, Layers, Play, FileText, ArrowRight, ExternalLink } from "lucide-react";
 import { checkHealth, isSimulationMode } from "../services/api";
 import { ApiSettingsModal } from "./ApiSettingsModal";
 
@@ -31,6 +31,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
     <>
       <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#070a12]/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Top Row: Logo, Badges, Launch Scanner CTA */}
           <div className="flex items-center justify-between h-16 gap-4">
             
             {/* Logo & Subtitle */}
@@ -53,13 +55,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-400 font-medium hidden sm:block">
-                  Cryptographic Trust Layer for AI Agents
+                  Trust Infrastructure For Autonomous Systems
                 </div>
               </div>
             </div>
 
             {/* Live Badges: X Layer Escrow & Ed25519 Key Status */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden xl:flex items-center gap-3">
               {/* Escrow Bond Badge */}
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
                 <Coins className="w-3.5 h-3.5 text-amber-400" />
@@ -90,8 +92,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               </div>
             </div>
 
-            {/* Action Buttons & Tabs */}
-            <div className="flex items-center gap-2">
+            {/* Primary Action Button: Launch Scanner */}
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsSettingsOpen(true)}
                 className="p-2 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
@@ -99,82 +101,108 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               >
                 <Settings className="w-4 h-4" />
               </button>
+
+              <button
+                onClick={() => setActiveTab("playground")}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/20 flex items-center gap-1.5 transition-all transform active:scale-95 cursor-pointer whitespace-nowrap"
+              >
+                <Play className="w-3.5 h-3.5 fill-white" />
+                <span>Launch Scanner</span>
+              </button>
             </div>
           </div>
 
-          {/* Navigation Bar Tabs */}
+          {/* Bottom Row: Navigation Bar Tabs with Purpose Titles */}
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2 border-t border-slate-800/40">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              title="Overview & Architecture"
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === "overview"
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
               }`}
             >
-              <Layers className="w-4 h-4 text-cyan-400" />
-              Overview & Architecture
+              <Layers className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Overview</span>
             </button>
 
             <button
               onClick={() => setActiveTab("playground")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              title="Verify Before Execution — Evaluate agent actions before they become irreversible."
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === "playground"
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
               }`}
             >
-              <ShieldCheck className="w-4 h-4" />
-              Scanner
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Scanner</span>
             </button>
 
             <button
               onClick={() => setActiveTab("chain")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              title="Track Every Decision — Explore the complete history of autonomous activity."
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === "chain"
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
               }`}
             >
-              <Activity className="w-4 h-4" />
-              Sentinel Chain
+              <Activity className="w-3.5 h-3.5" />
+              <span>Chain</span>
             </button>
 
             <button
               onClick={() => setActiveTab("verifier")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              title="Verify Trust Proofs — Confirm that decisions were evaluated and recorded correctly."
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === "verifier"
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
               }`}
             >
-              <Lock className="w-4 h-4" />
-              Receipt Verifier
+              <Lock className="w-3.5 h-3.5" />
+              <span>Receipts</span>
             </button>
 
             <button
               onClick={() => setActiveTab("dispute")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              title="Challenge Decisions — Review, contest, and resolve questionable outcomes."
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === "dispute"
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
               }`}
             >
-              <Coins className="w-4 h-4" />
-              Disputes & Slashable Escrow
+              <Coins className="w-3.5 h-3.5" />
+              <span>Disputes</span>
             </button>
 
             <button
               onClick={() => setActiveTab("analytics")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              title="Understand Agent Behaviour — Monitor performance, risk, and trust over time."
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 activeTab === "analytics"
                   ? "bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-300 border border-cyan-500/40 glow-cyan"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
               }`}
             >
-              <Activity className="w-4 h-4" />
-              Analytics & Threat Intel
+              <Activity className="w-3.5 h-3.5" />
+              <span>Analytics</span>
             </button>
+
+            <a
+              href="https://github.com/Olalolo22/Sentinel#readme"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Build With Sentinel — Integrate verification into autonomous systems."
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 transition-all ml-auto"
+            >
+              <FileText className="w-3.5 h-3.5 text-violet-400" />
+              <span>Docs</span>
+              <ExternalLink className="w-3 h-3 opacity-60" />
+            </a>
           </nav>
         </div>
       </header>
