@@ -3,7 +3,18 @@ import { AlertCircle, Scale, ShieldCheck, CheckCircle2, AlertTriangle, FileText,
 import { submitDispute } from "../services/api";
 
 export const DisputeHub: React.FC = () => {
-  const [receiptId, setReceiptId] = useState("SL-8F92A1");
+  const [receiptId, setReceiptId] = useState(() => {
+    try {
+      const latestStr = localStorage.getItem("sentinel_latest_scan");
+      if (latestStr) {
+        const parsed = JSON.parse(latestStr);
+        if (parsed?.trust_receipt?.verdict_hash) {
+          return parsed.trust_receipt.verdict_hash;
+        }
+      }
+    } catch {}
+    return "SL-8F92A1";
+  });
   const [reason, setReason] = useState("Incorrect risk assessment");
   const [evidence, setEvidence] = useState("Agent executed transfer immediately before policy update was propagated.");
   const [submitting, setSubmitting] = useState(false);
