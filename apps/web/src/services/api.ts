@@ -202,10 +202,18 @@ export async function scanPayload(
       },
     };
 
+    try {
+      localStorage.setItem("sentinel_latest_scan", JSON.stringify(normalizedData));
+    } catch {}
+
     return { data: normalizedData, isSimulated: false };
   } catch (err) {
     console.warn("API unreachable, generating fallback simulated response:", err);
-    return { data: generateSimulatedScan(content, context, jobId), isSimulated: true };
+    const simData = generateSimulatedScan(content, context, jobId);
+    try {
+      localStorage.setItem("sentinel_latest_scan", JSON.stringify(simData));
+    } catch {}
+    return { data: simData, isSimulated: true };
   }
 }
 
@@ -287,7 +295,32 @@ export async function fetchChain(jobId: string): Promise<{ hops: ChainHop[]; isS
     const res = await fetch(`${baseUrl}/v1/chain/${encodeURIComponent(jobId)}`);
     if (res.ok) {
       const data = await res.json();
-      return { hops: data.chain || [], isSimulated: false };
+      if (data.chain && data.chain.length > 0) {
+        return { hops: data.chain, isSimulated: false };
+      }
+    }
+  } catch {}
+
+  // Check if a recent scan exists in localStorage
+  let latestHop: ChainHop | null = null;
+  try {
+    const latestStr = localStorage.getItem("sentinel_latest_scan");
+    if (latestStr) {
+      const parsed: ScanResponse = JSON.parse(latestStr);
+      if (parsed?.trust_receipt) {
+        const r = parsed.trust_receipt;
+        latestHop = {
+          job_id: r.job_id || jobId,
+          step: 3,
+          actor_id: r.actor_id || "trading-agent-01",
+          verdict_hash: r.verdict_hash ? `${r.verdict_hash.slice(0, 6)}...${r.verdict_hash.slice(-4)}` : "0x9d4e...a78f",
+          action: r.verdict.action,
+          risk_score: r.verdict.risk_score,
+          timestamp: r.timestamp || new Date().toISOString(),
+          prev_receipt_hash: "0x1e7b...4c2a",
+          valid: true,
+        };
+      }
     }
   } catch {}
 
@@ -316,13 +349,13 @@ export async function fetchChain(jobId: string): Promise<{ hops: ChainHop[]; isS
       prev_receipt_hash: "0x8f3a...b91c",
       valid: true,
     },
-    {
+    latestHop || {
       job_id: jobId,
       step: 3,
-      actor_id: "Agent_Execution_Worker",
+      actor_id: "trading-agent-01",
       verdict_hash: "0x9d4e...a78f",
-      action: "reject",
-      risk_score: 0.94,
+      action: "allow",
+      risk_score: 0.12,
       timestamp: new Date(now - 10000).toISOString(),
       prev_receipt_hash: "0x1e7b...4c2a",
       valid: true,

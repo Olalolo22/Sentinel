@@ -4,7 +4,18 @@ import { verifyReceipt } from "../services/api";
 import { TrustReceipt } from "../types";
 
 export const ReceiptVerifier: React.FC = () => {
-  const [hashInput, setHashInput] = useState("SL-8F92A1");
+  const [hashInput, setHashInput] = useState(() => {
+    try {
+      const latestStr = localStorage.getItem("sentinel_latest_scan");
+      if (latestStr) {
+        const parsed = JSON.parse(latestStr);
+        if (parsed?.trust_receipt?.verdict_hash) {
+          return parsed.trust_receipt.verdict_hash;
+        }
+      }
+    } catch {}
+    return "SL-8F92A1";
+  });
   const [loading, setLoading] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{
     valid: boolean;
