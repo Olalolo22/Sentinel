@@ -1,0 +1,23 @@
+name: Keep Render Backend Awake
+
+on:
+  schedule:
+    # Triggers every 10 minutes to prevent Render free instance from sleeping
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual triggering from GitHub Actions tab
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Sentinel Health Endpoint
+        run: |
+          API_URL="${{ secrets.RENDER_API_URL || 'https://sentinel-api.onrender.com' }}"
+          echo "Sending keep-alive ping to ${API_URL}/v1/health..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "${API_URL}/v1/health")
+          echo "Response HTTP Status: ${STATUS}"
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Backend is warm and healthy."
+          else
+            echo "⚠️ Health check failed with status $STATUS"
+          fi
