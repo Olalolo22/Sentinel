@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.png" alt="Sentinel Logo" width="200"/>
+</p>
+
 # Sentinel Trust Layer
 
 ## The Verification Layer For Autonomous Agents
