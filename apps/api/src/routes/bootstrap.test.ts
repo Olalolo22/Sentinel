@@ -88,4 +88,19 @@ describe("OKX A2MCP Bootstrap Endpoint (/v1/bootstrap-trust)", () => {
     expect(data.service_type).toBe("A2MCP");
     expect(data.trust_receipt).toBeDefined();
   });
+
+  it("responds to GET /v1/bootstrap-trust quote/probe requests with 200 OK and service metadata", async () => {
+    const res = await app.request("/v1/bootstrap-trust", {
+      method: "GET",
+    });
+
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.service).toBe("Sentinel Trust Layer");
+    expect(data.service_type).toBe("A2MCP");
+    expect(data.status).toBe("ACTIVE");
+    expect(data.payment.protocol).toBe("x402");
+    expect(data.payment.network).toBe("eip155:196");
+    expect(data.payment.amount).toBe("0.05 USDT");
+  });
 });

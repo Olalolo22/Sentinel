@@ -169,3 +169,27 @@ export async function bootstrapTrust(c: Context) {
     return c.json({ error: "Internal Server Error", message: error?.message }, 500);
   }
 }
+
+/**
+ * GET Handler for OKX A2MCP Bootstrap Trust Endpoint
+ * Responds to automated quotes and service status probes (e.g. `onchainos payment quote`)
+ */
+export async function bootstrapTrustInfo(c: Context) {
+  return c.json({
+    service: "Sentinel Trust Layer",
+    service_type: "A2MCP",
+    status: "ACTIVE",
+    endpoint: "/v1/bootstrap-trust",
+    method: "POST",
+    payment: {
+      protocol: "x402",
+      network: "eip155:196", // X Layer mainnet
+      scheme: "exact",
+      amount: "0.05 USDT",
+      payTo: process.env.SENTINEL_PAYMENT_ADDRESS || "0x0000000000000000000000000000000000000000",
+    },
+    description: "OKX A2MCP bootstrap trust verification running Sentinel's 4-stage cryptographic threat detection pipeline.",
+    usage: "Send HTTP POST with JSON payload containing 'content', 'prompt', 'message', or 'input'.",
+  });
+}
+

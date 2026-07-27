@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import { health } from "./routes/health.js";
 import { scan } from "./routes/scan.js";
 import { batchScan } from "./routes/batch.js";
-import { bootstrapTrust } from "./routes/bootstrap.js";
+import { bootstrapTrust, bootstrapTrustInfo } from "./routes/bootstrap.js";
 import { verify } from "./routes/verify.js";
 import { chain } from "./routes/chain.js";
 import { createDispute, checkDispute, approveDispute } from "./routes/dispute.js";
@@ -22,6 +22,11 @@ export function createApp() {
   app.post("/v1/dispute", createDispute);
   app.get("/v1/dispute/:verdict_hash", checkDispute);
   app.post("/v1/dispute/:verdict_hash/approve", approveDispute);
+
+  // GET Info / Probe routes for A2MCP (responds to quote/probe GET requests)
+  app.get("/v1/bootstrap-trust", bootstrapTrustInfo);
+  app.get("/v1/a2mcp/bootstrap-trust", bootstrapTrustInfo);
+  app.get("/v1/a2mcp/scan", bootstrapTrustInfo);
 
   // Paid routes — optionally gated by x402 middleware
   // When PAYMENT_ENABLED=true: agents must attach an X-Payment header.
