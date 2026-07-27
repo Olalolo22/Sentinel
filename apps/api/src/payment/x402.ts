@@ -105,6 +105,21 @@ export function buildPaymentMiddleware(): MiddlewareHandler | null {
       description: "Sentinel trust check — batch scan up to 20 items (0.04 USDT, 20% discount)",
       mimeType: "application/json",
     },
+    "/v1/bootstrap-trust": {
+      accepts: scanOption,
+      description: "OKX A2MCP bootstrap trust verification (0.05 USDT)",
+      mimeType: "application/json",
+    },
+    "/v1/a2mcp/bootstrap-trust": {
+      accepts: scanOption,
+      description: "OKX A2MCP bootstrap trust verification (0.05 USDT)",
+      mimeType: "application/json",
+    },
+    "/v1/a2mcp/scan": {
+      accepts: scanOption,
+      description: "OKX A2MCP trust scan verification (0.05 USDT)",
+      mimeType: "application/json",
+    },
   };
 
   console.log(

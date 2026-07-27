@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { health } from "./routes/health.js";
 import { scan } from "./routes/scan.js";
 import { batchScan } from "./routes/batch.js";
+import { bootstrapTrust } from "./routes/bootstrap.js";
 import { verify } from "./routes/verify.js";
 import { chain } from "./routes/chain.js";
 import { createDispute, checkDispute, approveDispute } from "./routes/dispute.js";
@@ -29,10 +30,16 @@ export function createApp() {
   if (paymentMw) {
     app.use("/v1/scan", paymentMw);
     app.use("/v1/scan/batch", paymentMw);
+    app.use("/v1/bootstrap-trust", paymentMw);
+    app.use("/v1/a2mcp/bootstrap-trust", paymentMw);
+    app.use("/v1/a2mcp/scan", paymentMw);
   }
 
   app.post("/v1/scan", scan);
   app.post("/v1/scan/batch", batchScan);
+  app.post("/v1/bootstrap-trust", bootstrapTrust);
+  app.post("/v1/a2mcp/bootstrap-trust", bootstrapTrust);
+  app.post("/v1/a2mcp/scan", bootstrapTrust);
 
   app.get("/", (c) =>
     c.json({
@@ -40,7 +47,17 @@ export function createApp() {
       version: "0.1.0",
       payment: process.env.PAYMENT_ENABLED === "true" ? "x402/enabled" : "free-tier",
       docs: "https://github.com/Olalolo22/Sentinel — pay-per-call trust layer for AI agents",
-      endpoints: ["/v1/health", "/v1/scan", "/v1/scan/batch", "/v1/verify/{verdict_hash}", "/v1/chain/{job_id}", "/v1/dispute"],
+      endpoints: [
+        "/v1/health",
+        "/v1/scan",
+        "/v1/scan/batch",
+        "/v1/bootstrap-trust",
+        "/v1/a2mcp/bootstrap-trust",
+        "/v1/a2mcp/scan",
+        "/v1/verify/{verdict_hash}",
+        "/v1/chain/{job_id}",
+        "/v1/dispute",
+      ],
     }),
   );
   return app;
