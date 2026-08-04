@@ -8,12 +8,53 @@ import { verify } from "./routes/verify.js";
 import { chain } from "./routes/chain.js";
 import { createDispute, checkDispute, approveDispute } from "./routes/dispute.js";
 import { buildPaymentMiddleware } from "./payment/x402.js";
+import { API_VERSION } from "./version.js";
 
 export function createApp() {
   const app = new Hono();
 
   // Global: CORS on everything
   app.use("*", cors());
+
+  // A2A Agent Card — OKX and A2A-compliant platforms ping this to verify the agent is online.
+  // Must be served at /.well-known/agent.json per the A2A v1 spec.
+  const agentCard = {
+    protocolVersion: "1.0",
+    name: "Sentinel",
+    description:
+      "Pay-per-call AI trust layer. Scans contracts and agent outputs for vulnerabilities, bias, and prompt injection. Returns cryptographically-signed trust verdicts.",
+    url: process.env.AGENT_URL ?? "",
+    provider: { organization: "Sentinel", url: "https://github.com/Olalolo22/Sentinel" },
+    version: API_VERSION,
+    capabilities: { streaming: false, pushNotifications: false },
+    defaultInputModes: ["application/json"],
+    defaultOutputModes: ["application/json"],
+    skills: [
+      {
+        id: "scan",
+        name: "Contract / Output Scan",
+        description: "Scan a smart contract or agent output for security vulnerabilities, bias, and prompt injection. Returns a signed trust verdict.",
+        inputModes: ["application/json"],
+        outputModes: ["application/json"],
+        tags: ["security", "trust", "scan", "smart-contract"],
+      },
+      {
+        id: "bootstrap-trust",
+        name: "Bootstrap Trust",
+        description: "Run a full trust assessment pipeline and return a signed receipt for agent-to-agent trust bootstrapping.",
+        inputModes: ["application/json"],
+        outputModes: ["application/json"],
+        tags: ["trust", "receipt", "bootstrap"],
+      },
+    ],
+    authentication: process.env.PAYMENT_ENABLED === "true"
+      ? { schemes: ["x402"] }
+      : { schemes: [] },
+  };
+
+  app.get("/.well-known/agent.json", (c) => c.json(agentCard));
+  // Legacy path — some older A2A implementations use this
+  app.get("/.well-known/agent-card.json", (c) => c.json(agentCard));
 
   // Free routes — no payment required
   app.route("/v1/health", health);
